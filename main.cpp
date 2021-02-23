@@ -50,6 +50,20 @@ bool is_spanning_tree(graph_t l, graph_t r) {
   return seen.size() == lvs.size();
 }
 
+size_t num_leaves(graph_t g) {
+  auto [vs, es] = g;
+  map<vertex_t, size_t> cardinality;
+  for (auto [u, v] : es) {
+    ++cardinality[u];
+    ++cardinality[v];
+  }
+  size_t count = 0;
+  for (auto [k, v] : cardinality) {
+    if (v == 1) ++count;
+  }
+  return count;
+}
+
 set<interval_t> random_connected_interval_set(size_t seed, size_t num) {
   default_random_engine rng(seed);
   uniform_int_distribution<uint8_t> bool_dist(0, 1);
@@ -73,12 +87,101 @@ set<interval_t> random_connected_interval_set(size_t seed, size_t num) {
   return is;
 }
 
+graph_t interval_graph_from_set(set<interval_t> verts) {
+  struct event_t {
+    interval_t interval;
+    bool open;
+    event_t(interval_t interval, bool open) : interval(interval), open(open) {}
+    weak_ordering operator<=>(const event_t& rhs) const {
+      coord_t lc = open ? interval.first : interval.second;
+      coord_t rc = rhs.open ? rhs.interval.first : rhs.interval.second;
+      if (lc == rc) return rhs.open <=> open;
+      return lc <=> rc;
+    }
+  };
+
+  vector<event_t> events;
+  for (auto interval : verts) {
+    events.emplace_back(interval, true);
+    events.emplace_back(interval, false);
+  }
+  sort(events.begin(), events.end());
+
+  set<edge_t> edges;
+  set<interval_t> curr;
+  for (auto event : events) {
+    if (event.open) {
+      for (auto interval : curr) {
+        edges.insert(make_edge(event.interval, interval));
+      }
+      curr.insert(event.interval);
+    } else {
+      curr.erase(event.interval);
+    }
+  }
+
+  return {verts, edges};
+}
+
+graph_t random_connected_interval_graph(size_t seed, size_t verts) {
+  return interval_graph_from_set(random_connected_interval_set(seed, verts));
+}
+
+optional<graph_t> mist_naive(graph_t g) {
+  size_t best_leaves = numeric_limits<size_t>::max();
+  optional<graph_t> best;
+
+  auto [vs, es] = g;
+  size_t limit = vs.size() - 1;
+  vector<edge_t> edges(es.begin(), es.end());
+
+  typedef pair<set<edge_t>, size_t> state_t;
+  stack<state_t> s;
+  s.push(make_pair(set<edge_t>(), 0));
+  while (!s.empty()) {
+    auto [es_prime, i] = s.top(); s.pop();
+    if (es_prime.size() == limit) {
+      auto g_prime = make_pair(vs, es_prime);
+      if (is_spanning_tree(g_prime, g)) {
+        size_t leaves = num_leaves(g_prime);
+        if (leaves < best_leaves) {
+          best_leaves = leaves;
+          best = g_prime;
+        }
+      }
+    } else if (es_prime.size() < limit && i < edges.size()) {
+      s.push(make_pair(es_prime, i+1));
+      es_prime.insert(edges[i]);
+      s.push(make_pair(es_prime, i+1));
+    }
+  }
+
+  return best;
+}
+
 int main() {
   default_random_engine rng(792451836);
 
-  for (size_t i = 0; i < 10000; ++i) {
-    size_t num = 1000;
-    auto is = random_connected_interval_set(rng(), num);
-    assert(is.size() == num);
+  for (size_t i = 0; i < 1; ++i) {
+    size_t num = 8;
+    auto g = random_connected_interval_graph(rng(), num);
+    auto [vs, es] = g;
+    assert(vs.size() == num);
+    for (auto v : vs) {
+      cerr << "(" << v.first << ", " << v.second << ")" << endl;
+    }
+    cerr << endl;
+    for (auto e : es) {
+      cerr << "(" << e.first.first << ", " << e.first.second << ") - ";
+      cerr << "(" << e.second.first << ", " << e.second.second << ")" << endl;
+    }
+    auto t = mist_naive(g).value();
+    auto [tvs, tes] = t;
+    assert(is_spanning_tree(t, g));
+    cerr << endl << "MIST: " << num_leaves(t) << " leaves" << endl;
+    for (auto e : tes) {
+      cerr << "(" << e.first.first << ", " << e.first.second << ") - ";
+      cerr << "(" << e.second.first << ", " << e.second.second << ")" << endl;
+    }
   }
 }
