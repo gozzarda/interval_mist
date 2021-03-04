@@ -171,6 +171,7 @@ vector<vector<vertex_t>> interval_path_cover(graph_t g) {
   }
 
   auto compare_right = [](const vertex_t& u, const vertex_t& v) -> bool {
+    if (u.second == v.second) return u.first < v.first;
     return u.second < v.second;
   };
 
@@ -207,11 +208,64 @@ vector<vector<vertex_t>> interval_path_cover(graph_t g) {
   return paths;
 }
 
+optional<graph_t> interval_mist_greedy(graph_t g) {
+  auto [vs, es] = g;
+
+  auto compare_right = [](const vertex_t& u, const vertex_t& v) -> bool {
+    if (u.second == v.second) return u.first < v.first;
+    return u.second < v.second;
+  };
+
+  map<vertex_t, set<vertex_t, decltype(compare_right)>> adjlist;
+  for (auto [u, v] : es) {
+    assert(vs.count(u));
+    assert(vs.count(v));
+    adjlist[u].insert(v);
+    adjlist[v].insert(u);
+  }
+
+  set<vertex_t, decltype(compare_right)> todo(vs.begin(), vs.end());
+  set<edge_t> tes;
+
+  vertex_t prev = *todo.begin();
+  todo.erase(todo.begin());
+
+  while (!todo.empty()) {
+    optional<vertex_t> curr;
+    for (auto v : adjlist[prev]) {
+      if (todo.count(v)) {
+        curr = v;
+        break;
+      }
+    }
+    if (curr) {
+      tes.insert(make_edge(prev, curr.value()));
+      todo.erase(curr.value());
+      prev = curr.value();
+    } else {
+      bool done = false;
+      for (auto u : todo) {
+        for (auto v : adjlist[u]) {
+          if (!todo.count(v)) {
+            tes.insert(make_edge(u, v));
+            prev = v;
+            done = true;
+            break;
+          }
+        }
+        if (done) break;
+      }
+    }
+  }
+
+  return {{vs, tes}};
+}
+
 int main() {
   default_random_engine rng(792451839);
 
-  for (size_t i = 0; i < 1; ++i) {
-    size_t num = 8;
+  for (size_t i = 0; i < 1000; ++i) {
+    size_t num = 10;
     auto g = random_connected_interval_graph(rng(), num);
     auto [vs, es] = g;
     assert(vs.size() == num);
@@ -224,20 +278,24 @@ int main() {
       cerr << "(" << e.second.first << ", " << e.second.second << ")" << endl;
     }
     auto t = interval_mist_naive(g).value();
-    auto [tvs, tes] = t;
     assert(is_spanning_tree(t, g));
+    auto tt = interval_mist_greedy(g).value();
     cerr << endl << "MIST: " << num_leaves(t) << " leaves" << endl;
+    cerr << "TEST: " << num_leaves(tt) << " leaves" << endl;
+    auto [tvs, tes] = tt;
     for (auto e : tes) {
       cerr << "(" << e.first.first << ", " << e.first.second << ") - ";
       cerr << "(" << e.second.first << ", " << e.second.second << ")" << endl;
     }
-    auto pc = interval_path_cover(g);
-    cerr << endl << "Path Cover:" << endl;
-    for (auto p : pc) {
-      for (auto v : p) {
-        cerr << "  (" << v.first << ", " << v.second << ")";
-      }
-      cerr << endl;
-    }
+    assert(is_spanning_tree(tt, g));
+    assert(num_leaves(t) == num_leaves(tt));
+    // auto pc = interval_path_cover(g);
+    // cerr << endl << "Path Cover:" << endl;
+    // for (auto p : pc) {
+    //   for (auto v : p) {
+    //     cerr << "  (" << v.first << ", " << v.second << ")";
+    //   }
+    //   cerr << endl;
+    // }
   }
 }
