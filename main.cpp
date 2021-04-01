@@ -208,6 +208,23 @@ vector<vector<vertex_t>> interval_path_cover(graph_t g) {
   return paths;
 }
 
+optional<graph_t> interval_mist_path_cover(graph_t g) {
+  // TODO:
+  // Find a path cover P* of G
+  // Tc <- {p | p \in P*}, Pc <- P* \ {p}
+  // while Pc not empty:
+  //   Choose q from Pc where q intersects Tc
+  //   if leftMost(q) < leftMost(Tc):
+  //     Choose w \in V(q) adjacent to v_leftMost(Tc)
+  //     Update Tc by adding edge between these to connect q to Tc tree
+  //   if leftMost(q) > leftMost(Tc):
+  //     Choose w \in V(Tc) adjacent to v_leftMost(q)
+  //     Update Tc by adding edge between these to connect q to Tc tree
+  //   Pc <- Pc \ {q}
+  // return Tc
+  return {};
+}
+
 optional<graph_t> interval_mist_greedy(graph_t g) {
   auto [vs, es] = g;
 
