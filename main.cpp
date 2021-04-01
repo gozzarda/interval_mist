@@ -8,6 +8,12 @@ typedef interval_t vertex_t;
 typedef pair<vertex_t, vertex_t> edge_t;
 typedef pair<set<vertex_t>, set<edge_t>> graph_t;
 
+bool intervals_intersect(interval_t lhs, interval_t rhs) {
+  if (lhs.second < rhs.first) return false;
+  if (rhs.second < lhs.first) return false;
+  return true;
+}
+
 edge_t make_edge(vertex_t u, vertex_t v) {
   return make_pair(min(u, v), max(u, v));
 }
@@ -208,19 +214,65 @@ vector<vector<vertex_t>> interval_path_cover(graph_t g) {
   return paths;
 }
 
+set<edge_t> path_to_edge_set(vector<vertex_t> p) {
+  set<edge_t> result;
+  for (size_t i = 1; i < p.size(); ++i) {
+    result.insert(make_edge(p[i-1], p[i]));
+  }
+  return result;
+}
+
+// TODO: Finish
 optional<graph_t> interval_mist_path_cover(graph_t g) {
-  // TODO:
+  auto [vs, es] = g;
+
+  auto compare_right = [](const vertex_t& u, const vertex_t& v) -> bool {
+    if (u.second == v.second) return u.first < v.first;
+    return u.second < v.second;
+  };
   // Find a path cover P* of G
+  auto pc = interval_path_cover(g);
   // Tc <- {p | p \in P*}, Pc <- P* \ {p}
+  auto tvs = set<vertex_t, decltype(compare_right)>(p.back().begin(), p.back().end());
+  auto tes = path_to_edge_set(p.back());
+  p.pop_back();
   // while Pc not empty:
-  //   Choose q from Pc where q intersects Tc
-  //   if leftMost(q) < leftMost(Tc):
-  //     Choose w \in V(q) adjacent to v_leftMost(Tc)
-  //     Update Tc by adding edge between these to connect q to Tc tree
-  //   if leftMost(q) > leftMost(Tc):
-  //     Choose w \in V(Tc) adjacent to v_leftMost(q)
-  //     Update Tc by adding edge between these to connect q to Tc tree
-  //   Pc <- Pc \ {q}
+  while (!pc.empty()) {
+    // Choose q from Pc where q intersects Tc
+    auto qit = pc.begin();
+    for (; qit != pc.end(); ++qit) {
+      bool intersects = false;
+      for (auto tv : tvs) {
+        for (auto qv : *qit) {
+          if (intervals_intersect(tv, qv)) {
+            intersects = true;
+            break;
+          }
+        }
+        if (intersects) break;
+      }
+      if (intersects) break;
+    }
+    if (qit == pc.end()) return {};
+    auto qvs = set<vertex_t, decltype(compare_right)>(qit->begin(), qit->end());
+    auto qes = path_to_edge_set(*qit);
+    // get leftMost(Tc) and leftMost(q) for next steps
+    vertex_t t_leftmost = *tvs.begin();
+    vertex_t q_leftmost = *qvs.begin();
+    for (auto qv : *qit) if (qv.second < q_leftmost.second) q_leftmost = qv;
+    // if leftMost(q) < leftMost(Tc):
+    if (q_leftmost.second < t_leftmost.second) {
+      // Choose w \in V(q) adjacent to v_leftMost(Tc)
+      // Update Tc by adding edge between these to connect q to Tc tree
+    }
+    // if leftMost(q) > leftMost(Tc):
+    if (q_leftmost.second > t_leftmost.second) {
+      // Choose w \in V(Tc) adjacent to v_leftMost(q)
+      // Update Tc by adding edge between these to connect q to Tc tree
+    }
+    // Pc <- Pc \ {q}
+    pc.erase(qit);
+  }
   // return Tc
   return {};
 }
