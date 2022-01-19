@@ -382,35 +382,40 @@ int main() {
     auto g = random_connected_interval_graph(rng(), num);
     auto [vs, es] = g;
     assert(vs.size() == num);
+    cerr << endl;
     for (auto v : vs) {
       cerr << "(" << v.lower << ", " << v.upper << ")" << endl;
     }
     cerr << endl;
     for (auto e : es) {
-      cerr << "(" << e.first.lower << ", " << e.first.upper << ") - ";
-      cerr << "(" << e.second.lower << ", " << e.second.upper << ")" << endl;
+      cerr << e.first << " - " << e.second << endl;
     }
-    auto t = interval_mist_naive(g).value();
-    assert(is_spanning_tree(t, g));
-    cerr << endl << "MIST: " << num_leaves(t) << " leaves" << endl;
-    auto maybe_tt = interval_mist_path_cover(g);
+    // auto t = interval_mist_naive(g).value();
+    // assert(is_spanning_tree(t, g));
+    // cerr << endl << "MIST: " << num_leaves(t) << " leaves" << endl;
+    auto pc = interval_path_cover(g);
+    cerr << endl << "PATH COVER: " << pc.size() << " paths" << endl;
+    for (auto p : pc) {
+      for (auto v : p) {
+        cerr << "  " << v;
+      }
+      cerr << endl;
+    }
+    cerr << endl;
+    auto maybe_tt = interval_mist_greedy(g);
     assert(maybe_tt.has_value());
     auto tt = maybe_tt.value();
     cerr << "TEST: " << num_leaves(tt) << " leaves" << endl;
     auto [tvs, tes] = tt;
     for (auto e : tes) {
-      cerr << "(" << e.first.lower << ", " << e.first.upper << ") - ";
-      cerr << "(" << e.second.lower << ", " << e.second.upper << ")" << endl;
+      cerr << e.first << " - " << e.second << endl;
     }
     assert(is_spanning_tree(tt, g));
-    assert(num_leaves(t) == num_leaves(tt));
-    // auto pc = interval_path_cover(g);
-    // cerr << endl << "Path Cover:" << endl;
-    // for (auto p : pc) {
-    //   for (auto v : p) {
-    //     cerr << "  (" << v.lower << ", " << v.upper << ")";
-    //   }
-    //   cerr << endl;
-    // }
+    if (pc.size() + 1 != num_leaves(tt)) {
+      auto t = interval_mist_naive(g).value();
+      assert(is_spanning_tree(t, g));
+      cerr << endl << "MIST: " << num_leaves(t) << " leaves" << endl;
+    }
+    assert(pc.size() + 1 == num_leaves(tt));
   }
 }
