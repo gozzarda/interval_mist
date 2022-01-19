@@ -3,14 +3,27 @@
 using namespace std;
 
 typedef size_t coord_t;
-typedef pair<coord_t, coord_t> interval_t;
+struct Interval {
+  coord_t lower, upper;
+  Interval(coord_t lwr, coord_t upr) : lower(lwr), upper(upr) {}
+  bool operator==(const Interval& rhs) const { return lower == rhs.lower && upper == rhs.upper; }
+  auto operator<=>(const Interval& rhs) const {
+    if (upper == rhs.upper) return lower <=> rhs.lower;
+    return upper <=> rhs.upper;
+  }
+  friend ostream& operator<<(ostream& os, const Interval& val) {
+    os << '(' << val.lower << ", " << val.upper << ')';
+    return os;
+  }
+};
+typedef Interval interval_t;
 typedef interval_t vertex_t;
 typedef pair<vertex_t, vertex_t> edge_t;
 typedef pair<set<vertex_t>, set<edge_t>> graph_t;
 
 bool intervals_intersect(interval_t lhs, interval_t rhs) {
-  if (lhs.second < rhs.first) return false;
-  if (rhs.second < lhs.first) return false;
+  if (lhs.upper < rhs.lower) return false;
+  if (rhs.upper < lhs.lower) return false;
   return true;
 }
 
@@ -99,8 +112,8 @@ graph_t interval_graph_from_set(set<interval_t> verts) {
     bool open;
     event_t(interval_t interval, bool open) : interval(interval), open(open) {}
     weak_ordering operator<=>(const event_t& rhs) const {
-      coord_t lc = open ? interval.first : interval.second;
-      coord_t rc = rhs.open ? rhs.interval.first : rhs.interval.second;
+      coord_t lc = open ? interval.lower : interval.upper;
+      coord_t rc = rhs.open ? rhs.interval.lower : rhs.interval.upper;
       if (lc == rc) return rhs.open <=> open;
       return lc <=> rc;
     }
@@ -176,22 +189,17 @@ vector<vector<vertex_t>> interval_path_cover(graph_t g) {
     adjlist[v].push_back(u);
   }
 
-  auto compare_right = [](const vertex_t& u, const vertex_t& v) -> bool {
-    if (u.second == v.second) return u.first < v.first;
-    return u.second < v.second;
-  };
-
   for (auto& [k, v] : adjlist) {
-    sort(v.begin(), v.end(), compare_right);
+    sort(v.begin(), v.end());
   }
 
   set<vertex_t> covered;
-  set<vertex_t, decltype(compare_right)> ordered(vs.begin(), vs.end());
+  set<vertex_t> ordered(vs.begin(), vs.end());
 
   vector<vector<vertex_t>> paths(1);
   paths.back().push_back(*ordered.begin());
   covered.insert(paths.back().back());
-  ordered.erase(*ordered.begin());
+  ordered.erase(ordered.begin());
 
   while (!ordered.empty()) {
     vertex_t curr = paths.back().back();
@@ -222,70 +230,106 @@ set<edge_t> path_to_edge_set(vector<vertex_t> p) {
   return result;
 }
 
-// TODO: Finish
 optional<graph_t> interval_mist_path_cover(graph_t g) {
   auto [vs, es] = g;
 
-  auto compare_right = [](const vertex_t& u, const vertex_t& v) -> bool {
-    if (u.second == v.second) return u.first < v.first;
-    return u.second < v.second;
-  };
   // Find a path cover P* of G
   auto pc = interval_path_cover(g);
+  cerr << "PATH COVER:" << endl;
+  for (auto p : pc) {
+    for (auto v : p) {
+      cerr << "  (" << v.lower << ", " << v.upper << ")";
+    }
+    cerr << endl;
+  }
   // Tc <- {p | p \in P*}, Pc <- P* \ {p}
-  auto tvs = set<vertex_t, decltype(compare_right)>(p.back().begin(), p.back().end());
-  auto tes = path_to_edge_set(p.back());
-  p.pop_back();
+  auto tvs = set<vertex_t>(pc.back().begin(), pc.back().end());
+  auto tes = path_to_edge_set(pc.back());
+  pc.pop_back();
   // while Pc not empty:
   while (!pc.empty()) {
     // Choose q from Pc where q intersects Tc
     auto qit = pc.begin();
     for (; qit != pc.end(); ++qit) {
-      bool intersects = false;
-      for (auto tv : tvs) {
-        for (auto qv : *qit) {
-          if (intervals_intersect(tv, qv)) {
-            intersects = true;
-            break;
-          }
-        }
-        if (intersects) break;
-      }
-      if (intersects) break;
+      vertex_t tv_lmost = *tvs.begin();
+      vertex_t tv_rmost = *tvs.rbegin();
+      if (any_of(qit->begin(), qit->end(), [tv_lmost, tv_rmost](vertex_t qv){ return tv_lmost < qv && qv < tv_rmost; })) break;
+
+      vertex_t qv_lmost = *min_element(qit->begin(), qit->end());
+      vertex_t qv_rmost = *max_element(qit->begin(), qit->end());
+      if (any_of(tvs.begin(), tvs.end(), [qv_lmost, qv_rmost](vertex_t tv){ return qv_lmost < tv && tv < qv_rmost; })) break;
+
+      // TODO: Their definition of intersects doesn't actually work here, try with normal definition?
+      // bool intersects = false;
+      // for (auto tv : tvs) {
+      //   for (auto qv : *qit) {
+      //     if (intervals_intersect(tv, qv)) {
+      //       cerr << "\t(" << tv.lower << ", " << tv.upper << ") intersects (" << qv.lower << ", " << qv.upper << ")" << endl;
+      //       intersects = true;
+      //       break;
+      //     }
+      //   }
+      //   if (intersects) break;
+      // }
+      // if (intersects) break;
     }
     if (qit == pc.end()) return {};
-    auto qvs = set<vertex_t, decltype(compare_right)>(qit->begin(), qit->end());
+    auto qvs = set<vertex_t>(qit->begin(), qit->end());
     auto qes = path_to_edge_set(*qit);
     // get leftMost(Tc) and leftMost(q) for next steps
-    vertex_t t_leftmost = *tvs.begin();
-    vertex_t q_leftmost = *qvs.begin();
-    for (auto qv : *qit) if (qv.second < q_leftmost.second) q_leftmost = qv;
+    vertex_t tv_lmost = *tvs.begin();
+    vertex_t qv_lmost = *qvs.begin();
     // if leftMost(q) < leftMost(Tc):
-    if (q_leftmost.second < t_leftmost.second) {
+    if (qv_lmost.upper < tv_lmost.upper) {
       // Choose w \in V(q) adjacent to v_leftMost(Tc)
+      optional<vertex_t> w;
+      for (auto qv : qvs) {
+        if (intervals_intersect(qv, tv_lmost)) {
+          w = qv;
+          break;
+        }
+      }
+      if (!w) {
+        cerr << "ERROR:" << endl;
+        cerr << "None of" << endl;
+        for (auto qv : qvs) {
+          cerr << "\t(" << qv.lower << ", " << qv.upper << ")" << endl;
+        }
+        cerr << "intersect (" << tv_lmost.lower << ", " << tv_lmost.upper << ")" << endl;
+        return {};
+      }
       // Update Tc by adding edge between these to connect q to Tc tree
+      tvs.insert(qvs.begin(), qvs.end());
+      tes.insert(qes.begin(), qes.end());
+      tes.insert(make_edge(w.value(), tv_lmost));
     }
     // if leftMost(q) > leftMost(Tc):
-    if (q_leftmost.second > t_leftmost.second) {
+    if (qv_lmost.upper > tv_lmost.upper) {
       // Choose w \in V(Tc) adjacent to v_leftMost(q)
+      optional<vertex_t> w;
+      for (auto tv : tvs) {
+        if (intervals_intersect(tv, qv_lmost)) {
+          w = tv;
+          break;
+        }
+      }
+      if (!w) return {};
       // Update Tc by adding edge between these to connect q to Tc tree
+      tvs.insert(qvs.begin(), qvs.end());
+      tes.insert(qes.begin(), qes.end());
+      tes.insert(make_edge(w.value(), qv_lmost));
     }
     // Pc <- Pc \ {q}
     pc.erase(qit);
   }
   // return Tc
-  return {};
+  return make_pair(set<vertex_t>(tvs.begin(), tvs.end()), tes);
 }
 
 optional<graph_t> interval_mist_greedy(graph_t g) {
   auto [vs, es] = g;
 
-  auto compare_right = [](const vertex_t& u, const vertex_t& v) -> bool {
-    if (u.second == v.second) return u.first < v.first;
-    return u.second < v.second;
-  };
-
-  map<vertex_t, set<vertex_t, decltype(compare_right)>> adjlist;
+  map<vertex_t, set<vertex_t>> adjlist;
   for (auto [u, v] : es) {
     assert(vs.count(u));
     assert(vs.count(v));
@@ -293,7 +337,7 @@ optional<graph_t> interval_mist_greedy(graph_t g) {
     adjlist[v].insert(u);
   }
 
-  set<vertex_t, decltype(compare_right)> todo(vs.begin(), vs.end());
+  set<vertex_t> todo(vs.begin(), vs.end());
   set<edge_t> tes;
 
   vertex_t prev = *todo.begin();
@@ -339,22 +383,24 @@ int main() {
     auto [vs, es] = g;
     assert(vs.size() == num);
     for (auto v : vs) {
-      cerr << "(" << v.first << ", " << v.second << ")" << endl;
+      cerr << "(" << v.lower << ", " << v.upper << ")" << endl;
     }
     cerr << endl;
     for (auto e : es) {
-      cerr << "(" << e.first.first << ", " << e.first.second << ") - ";
-      cerr << "(" << e.second.first << ", " << e.second.second << ")" << endl;
+      cerr << "(" << e.first.lower << ", " << e.first.upper << ") - ";
+      cerr << "(" << e.second.lower << ", " << e.second.upper << ")" << endl;
     }
     auto t = interval_mist_naive(g).value();
     assert(is_spanning_tree(t, g));
-    auto tt = interval_mist_greedy(g).value();
     cerr << endl << "MIST: " << num_leaves(t) << " leaves" << endl;
+    auto maybe_tt = interval_mist_path_cover(g);
+    assert(maybe_tt.has_value());
+    auto tt = maybe_tt.value();
     cerr << "TEST: " << num_leaves(tt) << " leaves" << endl;
     auto [tvs, tes] = tt;
     for (auto e : tes) {
-      cerr << "(" << e.first.first << ", " << e.first.second << ") - ";
-      cerr << "(" << e.second.first << ", " << e.second.second << ")" << endl;
+      cerr << "(" << e.first.lower << ", " << e.first.upper << ") - ";
+      cerr << "(" << e.second.lower << ", " << e.second.upper << ")" << endl;
     }
     assert(is_spanning_tree(tt, g));
     assert(num_leaves(t) == num_leaves(tt));
@@ -362,7 +408,7 @@ int main() {
     // cerr << endl << "Path Cover:" << endl;
     // for (auto p : pc) {
     //   for (auto v : p) {
-    //     cerr << "  (" << v.first << ", " << v.second << ")";
+    //     cerr << "  (" << v.lower << ", " << v.upper << ")";
     //   }
     //   cerr << endl;
     // }
