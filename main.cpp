@@ -5,7 +5,7 @@ using namespace std;
 typedef size_t coord_t;
 struct Interval {
   coord_t lower, upper;
-  Interval(coord_t lwr, coord_t upr) : lower(lwr), upper(upr) {}
+  Interval(coord_t lwr, coord_t upr) : lower(min(lwr, upr)), upper(max(lwr, upr)) {}
   bool operator==(const Interval& rhs) const { return lower == rhs.lower && upper == rhs.upper; }
   auto operator<=>(const Interval& rhs) const {
     if (upper == rhs.upper) return lower <=> rhs.lower;
@@ -374,48 +374,93 @@ optional<graph_t> interval_mist_greedy(graph_t g) {
   return {{vs, tes}};
 }
 
-int main() {
-  default_random_engine rng(792451839);
-
-  for (size_t i = 0; i < 1000; ++i) {
-    size_t num = 10;
-    auto g = random_connected_interval_graph(rng(), num);
-    auto [vs, es] = g;
-    assert(vs.size() == num);
-    cerr << endl;
-    for (auto v : vs) {
-      cerr << "(" << v.lower << ", " << v.upper << ")" << endl;
-    }
-    cerr << endl;
-    for (auto e : es) {
-      cerr << e.first << " - " << e.second << endl;
-    }
-    // auto t = interval_mist_naive(g).value();
-    // assert(is_spanning_tree(t, g));
-    // cerr << endl << "MIST: " << num_leaves(t) << " leaves" << endl;
-    auto pc = interval_path_cover(g);
-    cerr << endl << "PATH COVER: " << pc.size() << " paths" << endl;
-    for (auto p : pc) {
-      for (auto v : p) {
-        cerr << "  " << v;
-      }
-      cerr << endl;
-    }
-    cerr << endl;
-    auto maybe_tt = interval_mist_greedy(g);
-    assert(maybe_tt.has_value());
-    auto tt = maybe_tt.value();
-    cerr << "TEST: " << num_leaves(tt) << " leaves" << endl;
-    auto [tvs, tes] = tt;
-    for (auto e : tes) {
-      cerr << e.first << " - " << e.second << endl;
-    }
-    assert(is_spanning_tree(tt, g));
-    if (pc.size() + 1 != num_leaves(tt)) {
-      auto t = interval_mist_naive(g).value();
-      assert(is_spanning_tree(t, g));
-      cerr << endl << "MIST: " << num_leaves(t) << " leaves" << endl;
-    }
-    assert(pc.size() + 1 == num_leaves(tt));
+void cerr_edges(set<edge_t> es) {
+  for (auto e : es) {
+    cerr << e.first << " - " << e.second << endl;
   }
+}
+
+void cerr_graph(graph_t g) {
+  auto [vs, es] = g;
+
+  for (auto v : vs) {
+    cerr << v << endl;
+  }
+  cerr << endl;
+  cerr_edges(g.second);
+}
+
+void cerr_pc(vector<vector<vertex_t>> pc) {
+  cerr << "PATH COVER: " << pc.size() << " paths" << endl;
+  for (auto p : pc) {
+    for (auto v : p) {
+      cerr << "  " << v;
+    }
+    cerr << endl;
+  }
+}
+
+bool test_pc_eq_mist(graph_t g) {
+  auto [vs, es] = g;
+  auto pc = interval_path_cover(g);
+  auto maybe_mist_greedy = interval_mist_greedy(g);
+  assert(maybe_mist_greedy.has_value());
+  auto mist_greedy = maybe_mist_greedy.value();
+  assert(is_spanning_tree(mist_greedy, g));
+  if (pc.size() + 1 != num_leaves(mist_greedy)) {
+    auto mist_naive = interval_mist_naive(g).value();
+    assert(is_spanning_tree(mist_naive, g));
+    assert(num_leaves(mist_greedy) == num_leaves(mist_naive));
+
+    cerr_graph(g);
+    cerr << endl;
+    cerr_pc(pc);
+    cerr << endl;
+    cerr << "GREEDY: " << num_leaves(mist_greedy) << " leaves" << endl;
+    cerr_edges(mist_greedy.second);
+    cerr << endl;
+    cerr << "NAIVE: " << num_leaves(mist_naive) << " leaves" << endl;
+
+    return false;
+  }
+  return true;
+}
+
+bool test_pc_eq_mist(size_t seed, size_t num) {
+  auto g = random_connected_interval_graph(seed, num);
+  if (!test_pc_eq_mist(g)) {
+    cerr << "test_pc_eq_mist failed with seed = " << seed << ", num = " << num << endl;
+    return false;
+  }
+  return true;
+}
+
+bool fuzz_pc_eq_mist(size_t seed, size_t count, size_t num) {
+  default_random_engine rng(seed);
+
+  for (size_t i = 0; i < count; ++i) {
+    if (!test_pc_eq_mist(rng(), num)) return false;
+  }
+  return true;
+}
+
+void pc_eq_mist_counterexample() {
+  set<interval_t> vs = {
+    Interval(0, 2),
+    Interval(1, 6),
+    Interval(3, 4),
+    Interval(5, 10),
+    Interval(7, 8),
+    Interval(9, 11),
+  };
+  auto g = interval_graph_from_set(vs);
+  assert(!test_pc_eq_mist(g));
+}
+
+int main() {
+  // if (fuzz_pc_eq_mist(792451839, 1000, 10)) {
+  //   cerr << "fuzz_pc_eq_mist passed" << endl;
+  // }
+  // test_pc_eq_mist(402518898, 10);
+  pc_eq_mist_counterexample();
 }
