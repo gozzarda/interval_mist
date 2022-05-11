@@ -329,6 +329,7 @@ optional<graph_t> interval_mist_path_cover(graph_t g) {
 optional<graph_t> interval_mist_greedy(graph_t g) {
   auto [vs, es] = g;
 
+  // Construct adjacency list
   map<vertex_t, set<vertex_t>> adjlist;
   for (auto [u, v] : es) {
     assert(vs.count(u));
@@ -337,13 +338,18 @@ optional<graph_t> interval_mist_greedy(graph_t g) {
     adjlist[v].insert(u);
   }
 
+  // Remaining vertices to add to tree and edges in tree so far
   set<vertex_t> todo(vs.begin(), vs.end());
   set<edge_t> tes;
 
+  // Start with naive tree of interval with leftmost right endpoint (LRE)
+  // Invariant: prev is always a leaf in the tree
   vertex_t prev = *todo.begin();
   todo.erase(todo.begin());
 
+  // While there are vertices not yet in tree
   while (!todo.empty()) {
+    // Select adjacent vertex to prev with LRE
     optional<vertex_t> curr;
     for (auto v : adjlist[prev]) {
       if (todo.count(v)) {
@@ -351,11 +357,17 @@ optional<graph_t> interval_mist_greedy(graph_t g) {
         break;
       }
     }
+
     if (curr) {
+      // Greedily attach curr to leaf, making prev internal (unless root)
       tes.insert(make_edge(prev, curr.value()));
       todo.erase(curr.value());
       prev = curr.value();
     } else {
+      // Pick LRE interval not in tree that can be connected to tree
+      // Connect to tree via LRE neighbour in tree
+      // Must not be able to be connected via leaf (since no leaf took it)
+      // Increases number of leaves, since it must branch off internal
       bool done = false;
       for (auto u : todo) {
         for (auto v : adjlist[u]) {
