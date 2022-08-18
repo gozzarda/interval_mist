@@ -8,7 +8,6 @@
 
 namespace gozz::interval_mist::naive {
 
-using Graph = gozz::graph::Graph;
 using Vertex = Graph::Vertex;
 using Edge = Graph::Edge;
 
