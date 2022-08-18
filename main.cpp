@@ -341,11 +341,13 @@ optional<graph_t> interval_mist_greedy(graph_t g) {
   // Remaining vertices to add to tree and edges in tree so far
   set<vertex_t> todo(vs.begin(), vs.end());
   set<edge_t> tes;
+  set<vertex_t> tvs;
 
   // Start with naive tree of interval with leftmost right endpoint (LRE)
   // Invariant: prev is always a leaf in the tree
   vertex_t prev = *todo.begin();
   todo.erase(todo.begin());
+  tvs.insert(prev);
 
   // While there are vertices not yet in tree
   while (!todo.empty()) {
@@ -360,6 +362,7 @@ optional<graph_t> interval_mist_greedy(graph_t g) {
 
     if (curr) {
       // Greedily attach curr to leaf, making prev internal (unless root)
+      tvs.insert(curr.value());
       tes.insert(make_edge(prev, curr.value()));
       todo.erase(curr.value());
       prev = curr.value();
@@ -372,8 +375,10 @@ optional<graph_t> interval_mist_greedy(graph_t g) {
       for (auto u : todo) {
         for (auto v : adjlist[u]) {
           if (!todo.count(v)) {
+            tvs.insert(u);
             tes.insert(make_edge(u, v));
-            prev = v;
+            todo.erase(u);
+            prev = u;
             done = true;
             break;
           }
@@ -381,6 +386,12 @@ optional<graph_t> interval_mist_greedy(graph_t g) {
         if (done) break;
       }
     }
+
+    graph_t t = {tvs, tes};
+    auto tg = interval_graph_from_set(tvs);
+    assert(is_spanning_tree(t, tg));
+    auto mist_naive = interval_mist_naive(tg).value();
+    assert(num_leaves(t) == num_leaves(mist_naive));
   }
 
   return {{vs, tes}};
@@ -411,6 +422,69 @@ void cerr_pc(vector<vector<vertex_t>> pc) {
     cerr << endl;
   }
 }
+
+/*
+ * FUZZ TEST GREEDY AGAINST NAIVE
+ */
+
+bool test_greedy_eq_mist(graph_t g) {
+  auto [vs, es] = g;
+  auto maybe_mist_greedy = interval_mist_greedy(g);
+  auto maybe_mist_naive = interval_mist_naive(g);
+
+  if (!maybe_mist_greedy.has_value() && !maybe_mist_naive.has_value()) {
+    assert(false);
+    return true;
+  }
+  if (maybe_mist_greedy.has_value() != maybe_mist_naive.has_value()) {
+    cerr_graph(g);
+    cerr << endl;
+    cerr << "GREEDY: " << (maybe_mist_greedy.has_value() ? "found solution" : "no solution found") << endl;
+    cerr << "NAIVE: " << (maybe_mist_naive.has_value() ? "found solution" : "no solution found") << endl;
+    return false;
+  }
+
+  auto mist_greedy = maybe_mist_greedy.value();
+  auto mist_naive = maybe_mist_naive.value();
+  if (num_leaves(mist_greedy) != num_leaves(mist_naive)) {
+    cerr_graph(g);
+    cerr << endl;
+    cerr << "GREEDY: " << num_leaves(mist_greedy) << " leaves" << endl;
+    cerr_edges(mist_greedy.second);
+    cerr << endl;
+    cerr << "NAIVE: " << num_leaves(mist_naive) << " leaves" << endl;
+    return false;
+  }
+
+  return true;
+}
+
+bool test_greedy_eq_mist(size_t seed, size_t num) {
+  auto g = random_connected_interval_graph(seed, num);
+  if (!test_greedy_eq_mist(g)) {
+    cerr << "test_greedy_eq_mist failed with seed = " << seed << ", num = " << num << endl;
+    return false;
+  }
+  return true;
+}
+
+bool fuzz_greedy_eq_mist(size_t seed, size_t count, size_t num) {
+  default_random_engine rng(seed);
+
+  for (size_t i = 0; i < count; ++i) {
+    cerr << i << " / " << count;
+    if (!test_greedy_eq_mist(rng(), num)) {
+      cerr << endl;
+      return false;
+    }
+    cerr << '\r';
+  }
+  return true;
+}
+
+/*
+ * FUZZ TEST PC AGAINST NAIVE
+ */
 
 bool test_pc_eq_mist(graph_t g) {
   auto [vs, es] = g;
@@ -466,13 +540,18 @@ void pc_eq_mist_counterexample() {
     Interval(9, 11),
   };
   auto g = interval_graph_from_set(vs);
+  // auto mt = interval_mist_path_cover(g);
+  // assert(mt.has_value());
   assert(!test_pc_eq_mist(g));
 }
 
 int main() {
+  if (fuzz_greedy_eq_mist(126835921, 100, 10)) {
+    cerr << "fuzz_greedy_eq_mist passed" << endl;
+  }
   // if (fuzz_pc_eq_mist(792451839, 1000, 10)) {
   //   cerr << "fuzz_pc_eq_mist passed" << endl;
   // }
   // test_pc_eq_mist(402518898, 10);
-  pc_eq_mist_counterexample();
+  // pc_eq_mist_counterexample();
 }
