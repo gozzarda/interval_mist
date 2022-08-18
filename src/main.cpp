@@ -11,79 +11,6 @@ using Graph = gozz::graph::Graph;
 using Vertex = Graph::Vertex;
 using Edge = Graph::Edge;
 
-optional<Graph> interval_mist_greedy(Graph g) {
-  auto [vs, es] = g;
-
-  // Construct adjacency list
-  map<Vertex, set<Vertex>> adjlist;
-  for (auto [u, v] : es) {
-    assert(vs.count(u));
-    assert(vs.count(v));
-    adjlist[u].insert(v);
-    adjlist[v].insert(u);
-  }
-
-  // Remaining vertices to add to tree and edges in tree so far
-  set<Vertex> todo(vs.begin(), vs.end());
-  set<Edge> tes;
-  set<Vertex> tvs;
-
-  // Start with naive tree of interval with leftmost right endpoint (LRE)
-  // Invariant: prev is always a leaf in the tree
-  Vertex prev = *todo.begin();
-  todo.erase(todo.begin());
-  tvs.insert(prev);
-
-  // While there are vertices not yet in tree
-  while (!todo.empty()) {
-    // Select adjacent vertex to prev with LRE
-    optional<Vertex> curr;
-    for (auto v : adjlist[prev]) {
-      if (todo.count(v)) {
-        curr = v;
-        break;
-      }
-    }
-
-    if (curr) {
-      // Greedily attach curr to leaf, making prev internal (unless root)
-      tvs.insert(curr.value());
-      tes.insert(Edge(prev, curr.value()));
-      todo.erase(curr.value());
-      prev = curr.value();
-    } else {
-      // Pick LRE interval not in tree that can be connected to tree
-      // Connect to tree via LRE neighbour in tree
-      // Must not be able to be connected via leaf (since no leaf took it)
-      // Increases number of leaves, since it must branch off internal
-      bool done = false;
-      for (auto u : todo) {
-        for (auto v : adjlist[u]) {
-          if (!todo.count(v)) {
-            tvs.insert(u);
-            tes.insert(Edge(u, v));
-            todo.erase(u);
-            prev = u;
-            done = true;
-            break;
-          }
-        }
-        if (done)
-          break;
-      }
-    }
-
-    Graph t = {tvs, tes};
-    auto tg = Graph::interval_graph_from_set(tvs);
-    assert(t.is_spanning_tree_of(tvs));
-    auto mist_naive =
-        gozz::interval_mist::naive::interval_mist_naive(tg).value();
-    assert(t.num_leaves() == mist_naive.num_leaves());
-  }
-
-  return {{vs, tes}};
-}
-
 void cerr_edges(set<Edge> es) {
   for (auto e : es) {
     cerr << e.src << " - " << e.dst << endl;
@@ -116,7 +43,7 @@ void cerr_pc(vector<vector<Vertex>> pc) {
 
 bool test_greedy_eq_mist(Graph g) {
   auto [vs, es] = g;
-  auto maybe_mist_greedy = interval_mist_greedy(g);
+  auto maybe_mist_greedy = gozz::interval_mist::greedy::interval_mist_greedy(g);
   auto maybe_mist_naive = gozz::interval_mist::naive::interval_mist_naive(g);
 
   if (!maybe_mist_greedy.has_value() && !maybe_mist_naive.has_value()) {
@@ -183,7 +110,7 @@ bool fuzz_greedy_eq_mist(size_t seed, size_t count, size_t num) {
 bool test_pc_eq_mist(Graph g) {
   auto [vs, es] = g;
   auto pc = gozz::interval_mist::path_cover::interval_path_cover(g);
-  auto maybe_mist_greedy = interval_mist_greedy(g);
+  auto maybe_mist_greedy = gozz::interval_mist::greedy::interval_mist_greedy(g);
   assert(maybe_mist_greedy.has_value());
   auto mist_greedy = maybe_mist_greedy.value();
   assert(mist_greedy.is_spanning_tree_of(g.verts));
