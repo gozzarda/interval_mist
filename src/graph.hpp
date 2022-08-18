@@ -40,6 +40,7 @@ struct Graph {
   size_t num_leaves() const;
 };
 
-// TODO: We represent subgraphs, which are not still interval graphs... make a more generic graph type?
+// TODO: We represent subgraphs, which are not still interval graphs... make a
+// more generic graph type?
 
 } // namespace gozz::graph

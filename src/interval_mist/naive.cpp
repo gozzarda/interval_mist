@@ -1,10 +1,10 @@
 #include "naive.hpp"
 #include "../graph.hpp"
 #include <limits>
-#include <vector>
 #include <set>
-#include <utility>
 #include <stack>
+#include <utility>
+#include <vector>
 
 namespace gozz::interval_mist::naive {
 
@@ -44,4 +44,4 @@ std::optional<Graph> interval_mist_naive(Graph g) {
   return best;
 }
 
-}
+} // namespace gozz::interval_mist::naive

@@ -1,6 +1,6 @@
+#include "graph.hpp"
 #include "interval.hpp"
 #include "interval_mist.hpp"
-#include "graph.hpp"
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -232,7 +232,8 @@ optional<Graph> interval_mist_greedy(Graph g) {
     Graph t = {tvs, tes};
     auto tg = Graph::interval_graph_from_set(tvs);
     assert(t.is_spanning_tree_of(tvs));
-    auto mist_naive = gozz::interval_mist::naive::interval_mist_naive(tg).value();
+    auto mist_naive =
+        gozz::interval_mist::naive::interval_mist_naive(tg).value();
     assert(t.num_leaves() == mist_naive.num_leaves());
   }
 
@@ -343,7 +344,8 @@ bool test_pc_eq_mist(Graph g) {
   auto mist_greedy = maybe_mist_greedy.value();
   assert(mist_greedy.is_spanning_tree_of(g.verts));
   if (pc.size() + 1 != mist_greedy.num_leaves()) {
-    auto mist_naive = gozz::interval_mist::naive::interval_mist_naive(g).value();
+    auto mist_naive =
+        gozz::interval_mist::naive::interval_mist_naive(g).value();
     assert(mist_naive.is_spanning_tree_of(g.verts));
     assert(mist_greedy.num_leaves() == mist_naive.num_leaves());
 

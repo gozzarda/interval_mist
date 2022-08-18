@@ -1,8 +1,8 @@
 #include "graph.hpp"
+#include <cassert>
 #include <map>
 #include <stack>
 #include <vector>
-#include <cassert>
 
 namespace gozz::graph {
 
@@ -59,7 +59,8 @@ Graph Graph::interval_graph_from_set(std::set<Vertex> vs) {
 }
 
 Graph Graph::random_connected_interval_graph(size_t seed, size_t verts) {
-  return Graph::interval_graph_from_set(gozz::interval::random_connected_interval_set(seed, verts));
+  return Graph::interval_graph_from_set(
+      gozz::interval::random_connected_interval_set(seed, verts));
 }
 
 void Graph::insert_vertex(Vertex v) { verts.insert(v); }
