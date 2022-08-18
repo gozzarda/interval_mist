@@ -1,6 +1,5 @@
 #include "greedy.hpp"
 
-#include "../graph.hpp"
 #include "naive.hpp"
 
 #include <map>

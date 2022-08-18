@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../graph.hpp"
+
 #include <optional>
 
 namespace interval_mist::solvers::naive {

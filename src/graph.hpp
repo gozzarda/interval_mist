@@ -1,6 +1,7 @@
 #pragma once
 
 #include "interval.hpp"
+
 #include <set>
 
 namespace interval_mist::graph {

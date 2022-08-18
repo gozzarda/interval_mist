@@ -1,4 +1,5 @@
 #include "graph.hpp"
+
 #include <cassert>
 #include <map>
 #include <stack>

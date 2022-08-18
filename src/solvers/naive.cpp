@@ -1,5 +1,5 @@
 #include "naive.hpp"
-#include "../graph.hpp"
+
 #include <limits>
 #include <set>
 #include <stack>
