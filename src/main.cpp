@@ -1,4 +1,5 @@
 #include "interval.hpp"
+#include "interval_mist.hpp"
 #include "graph.hpp"
 #include <bits/stdc++.h>
 
@@ -9,39 +10,6 @@ using Coord = Interval::Coord;
 using Graph = gozz::graph::Graph;
 using Vertex = Graph::Vertex;
 using Edge = Graph::Edge;
-
-optional<Graph> interval_mist_naive(Graph g) {
-  size_t best_leaves = numeric_limits<size_t>::max();
-  optional<Graph> best;
-
-  auto [vs, es] = g;
-  size_t limit = vs.size() - 1;
-  vector<Edge> edges(es.begin(), es.end());
-
-  typedef pair<set<Edge>, size_t> State;
-  stack<State> s;
-  s.push(make_pair(set<Edge>(), 0));
-  while (!s.empty()) {
-    auto [es_prime, i] = s.top();
-    s.pop();
-    if (es_prime.size() == limit) {
-      auto g_prime = Graph(vs, es_prime);
-      if (g_prime.is_spanning_tree_of(g.verts)) {
-        size_t leaves = g_prime.num_leaves();
-        if (leaves < best_leaves) {
-          best_leaves = leaves;
-          best = g_prime;
-        }
-      }
-    } else if (es_prime.size() < limit && i < edges.size()) {
-      s.push(make_pair(es_prime, i + 1));
-      es_prime.insert(edges[i]);
-      s.push(make_pair(es_prime, i + 1));
-    }
-  }
-
-  return best;
-}
 
 vector<vector<Vertex>> interval_path_cover(Graph g) {
   auto [vs, es] = g;
@@ -264,7 +232,7 @@ optional<Graph> interval_mist_greedy(Graph g) {
     Graph t = {tvs, tes};
     auto tg = Graph::interval_graph_from_set(tvs);
     assert(t.is_spanning_tree_of(tvs));
-    auto mist_naive = interval_mist_naive(tg).value();
+    auto mist_naive = gozz::interval_mist::naive::interval_mist_naive(tg).value();
     assert(t.num_leaves() == mist_naive.num_leaves());
   }
 
@@ -304,7 +272,7 @@ void cerr_pc(vector<vector<Vertex>> pc) {
 bool test_greedy_eq_mist(Graph g) {
   auto [vs, es] = g;
   auto maybe_mist_greedy = interval_mist_greedy(g);
-  auto maybe_mist_naive = interval_mist_naive(g);
+  auto maybe_mist_naive = gozz::interval_mist::naive::interval_mist_naive(g);
 
   if (!maybe_mist_greedy.has_value() && !maybe_mist_naive.has_value()) {
     assert(false);
@@ -375,7 +343,7 @@ bool test_pc_eq_mist(Graph g) {
   auto mist_greedy = maybe_mist_greedy.value();
   assert(mist_greedy.is_spanning_tree_of(g.verts));
   if (pc.size() + 1 != mist_greedy.num_leaves()) {
-    auto mist_naive = interval_mist_naive(g).value();
+    auto mist_naive = gozz::interval_mist::naive::interval_mist_naive(g).value();
     assert(mist_naive.is_spanning_tree_of(g.verts));
     assert(mist_greedy.num_leaves() == mist_naive.num_leaves());
 
