@@ -2,7 +2,7 @@
 #include <random>
 #include <vector>
 
-namespace gozz::interval {
+namespace interval_mist::interval {
 
 // TODO: Consider implementing hash and using unordered maps and sets where
 // appropriate template<> struct std::hash<Interval> {
@@ -52,4 +52,4 @@ std::set<Interval> random_connected_interval_set(size_t seed, size_t num) {
   return is;
 }
 
-} // namespace gozz::interval
+} // namespace interval_mist::interval

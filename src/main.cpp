@@ -1,13 +1,13 @@
 #include "graph.hpp"
 #include "interval.hpp"
-#include "interval_mist.hpp"
+#include "solvers.hpp"
 #include <bits/stdc++.h>
 
 using namespace std;
 
-using Interval = gozz::interval::Interval;
+using Interval = interval_mist::interval::Interval;
 using Coord = Interval::Coord;
-using Graph = gozz::graph::Graph;
+using Graph = interval_mist::graph::Graph;
 using Vertex = Graph::Vertex;
 using Edge = Graph::Edge;
 
@@ -43,8 +43,9 @@ void cerr_pc(vector<vector<Vertex>> pc) {
 
 bool test_greedy_eq_mist(Graph g) {
   auto [vs, es] = g;
-  auto maybe_mist_greedy = gozz::interval_mist::greedy::interval_mist_greedy(g);
-  auto maybe_mist_naive = gozz::interval_mist::naive::interval_mist_naive(g);
+  auto maybe_mist_greedy =
+      interval_mist::solvers::greedy::interval_mist_greedy(g);
+  auto maybe_mist_naive = interval_mist::solvers::naive::interval_mist_naive(g);
 
   if (!maybe_mist_greedy.has_value() && !maybe_mist_naive.has_value()) {
     assert(false);
@@ -109,14 +110,15 @@ bool fuzz_greedy_eq_mist(size_t seed, size_t count, size_t num) {
 
 bool test_pc_eq_mist(Graph g) {
   auto [vs, es] = g;
-  auto pc = gozz::interval_mist::path_cover::interval_path_cover(g);
-  auto maybe_mist_greedy = gozz::interval_mist::greedy::interval_mist_greedy(g);
+  auto pc = interval_mist::solvers::path_cover::interval_path_cover(g);
+  auto maybe_mist_greedy =
+      interval_mist::solvers::greedy::interval_mist_greedy(g);
   assert(maybe_mist_greedy.has_value());
   auto mist_greedy = maybe_mist_greedy.value();
   assert(mist_greedy.is_spanning_tree_of(g.verts));
   if (pc.size() + 1 != mist_greedy.num_leaves()) {
     auto mist_naive =
-        gozz::interval_mist::naive::interval_mist_naive(g).value();
+        interval_mist::solvers::naive::interval_mist_naive(g).value();
     assert(mist_naive.is_spanning_tree_of(g.verts));
     assert(mist_greedy.num_leaves() == mist_naive.num_leaves());
 

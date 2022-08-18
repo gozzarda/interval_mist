@@ -1,12 +1,12 @@
 #include "greedy.hpp"
 
-#include "naive.hpp"
 #include "../graph.hpp"
+#include "naive.hpp"
 
 #include <map>
 #include <set>
 
-namespace gozz::interval_mist::greedy {
+namespace interval_mist::solvers::greedy {
 
 using Vertex = Graph::Vertex;
 using Edge = Graph::Edge;
@@ -77,11 +77,11 @@ std::optional<Graph> interval_mist_greedy(Graph g) {
     auto tg = Graph::interval_graph_from_set(tvs);
     assert(t.is_spanning_tree_of(tvs));
     auto mist_naive =
-        gozz::interval_mist::naive::interval_mist_naive(tg).value();
+        interval_mist::solvers::naive::interval_mist_naive(tg).value();
     assert(t.num_leaves() == mist_naive.num_leaves());
   }
 
   return {{vs, tes}};
 }
 
-} // namespace gozz::interval_mist::greedy
+} // namespace interval_mist::solvers::greedy

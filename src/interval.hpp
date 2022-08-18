@@ -4,7 +4,7 @@
 #include <ostream>
 #include <set>
 
-namespace gozz::interval {
+namespace interval_mist::interval {
 
 // Interval representing a nonempty inclusive-exclusive range of the natural
 // numbers
@@ -26,4 +26,4 @@ struct Interval {
 
 std::set<Interval> random_connected_interval_set(size_t seed, size_t num);
 
-} // namespace gozz::interval
+} // namespace interval_mist::interval

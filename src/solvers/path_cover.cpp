@@ -2,7 +2,7 @@
 #include <iostream>
 #include <map>
 
-namespace gozz::interval_mist::path_cover {
+namespace interval_mist::solvers::path_cover {
 
 using Edge = Graph::Edge;
 
@@ -164,4 +164,4 @@ std::optional<Graph> interval_mist_path_cover(Graph g) {
   return Graph(std::set<Vertex>(tvs.begin(), tvs.end()), tes);
 }
 
-} // namespace gozz::interval_mist::path_cover
+} // namespace interval_mist::solvers::path_cover

@@ -3,10 +3,10 @@
 #include "interval.hpp"
 #include <set>
 
-namespace gozz::graph {
+namespace interval_mist::graph {
 
 struct Graph {
-  using Vertex = gozz::interval::Interval;
+  using Vertex = interval_mist::interval::Interval;
 
   struct Edge {
     Vertex src, dst;
@@ -21,7 +21,8 @@ struct Graph {
 
   Graph(std::set<Vertex>, std::set<Edge>);
 
-  static Graph interval_graph_from_set(std::set<gozz::interval::Interval>);
+  static Graph
+      interval_graph_from_set(std::set<interval_mist::interval::Interval>);
 
   static Graph random_connected_interval_graph(size_t seed, size_t verts);
 
@@ -43,4 +44,4 @@ struct Graph {
 // TODO: We represent subgraphs, which are not still interval graphs... make a
 // more generic graph type?
 
-} // namespace gozz::graph
+} // namespace interval_mist::graph

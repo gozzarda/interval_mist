@@ -6,7 +6,7 @@
 #include <utility>
 #include <vector>
 
-namespace gozz::interval_mist::naive {
+namespace interval_mist::solvers::naive {
 
 using Vertex = Graph::Vertex;
 using Edge = Graph::Edge;
@@ -43,4 +43,4 @@ std::optional<Graph> interval_mist_naive(Graph g) {
   return best;
 }
 
-} // namespace gozz::interval_mist::naive
+} // namespace interval_mist::solvers::naive
