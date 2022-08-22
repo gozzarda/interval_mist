@@ -64,13 +64,13 @@ std::optional<Graph> interval_mist_path_cover(Graph g) {
 
   // Find a path cover P* of G
   auto pc = interval_path_cover(g);
-  std::cerr << "PATH COVER:" << std::endl;
-  for (auto p : pc) {
-    for (auto v : p) {
-      std::cerr << "  (" << v.lower << ", " << v.upper << ")";
-    }
-    std::cerr << std::endl;
-  }
+  // std::cerr << "PATH COVER:" << std::endl;
+  // for (auto p : pc) {
+  //   for (auto v : p) {
+  //     std::cerr << "  (" << v.lower << ", " << v.upper << ")";
+  //   }
+  //   std::cerr << std::endl;
+  // }
   // Tc <- {p | p \in P*}, Pc <- P* \ {p}
   auto tvs = std::set<Vertex>(pc.back().begin(), pc.back().end());
   auto tes = path_to_edge_set(pc.back());

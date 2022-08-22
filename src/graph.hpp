@@ -15,6 +15,8 @@ struct Graph {
     Edge(Vertex, Vertex);
 
     friend auto operator<=>(const Edge &, const Edge &) = default;
+
+    friend std::ostream &operator<<(std::ostream &os, const Edge &val);
   };
 
   std::set<Vertex> verts;
@@ -40,9 +42,12 @@ struct Graph {
   bool is_spanning_tree_of(const std::set<Vertex> &) const;
 
   size_t num_leaves() const;
-};
 
-// TODO: We represent subgraphs, which are not still interval graphs... make a
-// more generic graph type?
+  void report_verts(std::ostream &os) const;
+
+  void report_edges(std::ostream &os) const;
+
+  void report(std::ostream &os) const;
+};
 
 } // namespace interval_mist::graph

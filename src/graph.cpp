@@ -13,6 +13,11 @@ using Edge = Graph::Edge;
 // Canonical orientation of undirected edges
 Edge::Edge(Vertex u, Vertex v) : src(std::min(u, v)), dst(std::max(u, v)) {}
 
+std::ostream &operator<<(std::ostream &os, const Edge &val) {
+  os << '(' << val.src << ", " << val.dst << ')';
+  return os;
+}
+
 Graph::Graph(std::set<Vertex> vs, std::set<Edge> es) : verts(vs), edges(es) {
   for (Edge e : edges) {
     assert(verts.count(e.src));
@@ -125,6 +130,30 @@ size_t Graph::num_leaves() const {
       ++count;
   }
   return count;
+}
+
+void Graph::report_verts(std::ostream &os) const {
+  os << '{' << std::endl;
+  for (Vertex v : verts) {
+    os << '\t' << v << ',' << std::endl;
+  }
+  os << '}';
+}
+
+void Graph::report_edges(std::ostream &os) const {
+  os << '{' << std::endl;
+  for (Edge e : edges) {
+    os << '\t' << e << ',' << std::endl;
+  }
+  os << '}';
+}
+
+void Graph::report(std::ostream &os) const {
+  os << '(';
+  report_verts(os);
+  os << ", ";
+  report_edges(os);
+  os << ')';
 }
 
 } // namespace interval_mist::graph
