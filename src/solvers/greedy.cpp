@@ -31,7 +31,7 @@ std::optional<Graph> interval_mist_greedy(Graph g) {
   // Invariant: prev is always a leaf in the tree
   Vertex prev = *todo.begin();
   todo.erase(todo.begin());
-  tvs.insert(prev);
+  // tvs.insert(prev);
 
   // While there are vertices not yet in tree
   while (!todo.empty()) {
@@ -46,7 +46,7 @@ std::optional<Graph> interval_mist_greedy(Graph g) {
 
     if (curr) {
       // Greedily attach curr to leaf, making prev internal (unless root)
-      tvs.insert(curr.value());
+      // tvs.insert(curr.value());
       tes.insert(Edge(prev, curr.value()));
       todo.erase(curr.value());
       prev = curr.value();
@@ -59,7 +59,7 @@ std::optional<Graph> interval_mist_greedy(Graph g) {
       for (auto u : todo) {
         for (auto v : adjlist[u]) {
           if (!todo.count(v)) {
-            tvs.insert(u);
+            // tvs.insert(u);
             tes.insert(Edge(u, v));
             todo.erase(u);
             prev = u;
@@ -72,12 +72,12 @@ std::optional<Graph> interval_mist_greedy(Graph g) {
       }
     }
 
-    Graph t = {tvs, tes};
-    auto tg = Graph::interval_graph_from_set(tvs);
-    assert(t.is_spanning_tree_of(tvs));
-    auto mist_naive =
-        interval_mist::solvers::naive::interval_mist_naive(tg).value();
-    assert(t.num_leaves() == mist_naive.num_leaves());
+    // Graph t = {tvs, tes};
+    // auto tg = Graph::interval_graph_from_set(tvs);
+    // assert(t.is_spanning_tree_of(tvs));
+    // auto mist_naive =
+    //     interval_mist::solvers::naive::interval_mist_naive(tg).value();
+    // assert(t.num_leaves() == mist_naive.num_leaves());
   }
 
   return {{vs, tes}};
