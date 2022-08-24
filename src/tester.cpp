@@ -38,10 +38,18 @@ void Result::report(std::ostream &os, std::string lhs_name,
 }
 
 Result compare_solvers(Solver lhs, Solver rhs, Graph graph) {
+  auto lhs_result = lhs(graph);
+  auto rhs_result = rhs(graph);
+
+  if (lhs_result && !lhs_result.value().is_spanning_tree_of(graph.verts))
+    lhs_result = {};
+  if (rhs_result && !rhs_result.value().is_spanning_tree_of(graph.verts))
+    rhs_result = {};
+
   return Result{
       .input = graph,
-      .lhs = lhs(graph),
-      .rhs = rhs(graph),
+      .lhs = lhs_result,
+      .rhs = rhs_result,
   };
 }
 
