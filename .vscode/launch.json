@@ -5,9 +5,9 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "launch",
+            "name": "main (LLDB)",
             "type": "lldb",
-            "preLaunchTask": "build",
+            "preLaunchTask": "Bazel Build main (Debug)",
             "request": "launch",
             "program": "${workspaceFolder}/bazel-bin/src/main",
             "cwd": "${workspaceFolder}/bazel-bin/src/main.runfiles/__main__/",

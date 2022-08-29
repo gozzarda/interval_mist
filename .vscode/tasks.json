@@ -4,14 +4,21 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "Bazel Build Project",
             "type": "shell",
-            // "command": "bazel build --compilation_mode=dbg //...",
-            "command": "bazel build --repo_env=CC=clang --copt=\"-g\" --strip=never -c dbg --sandbox_debug --spawn_strategy=local //...",
+            "command": "bazel build //...",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-        }
+        },
+        {
+            "label": "Bazel Build main (Debug)",
+            "type": "shell",
+            "command": "bazel build --compilation_mode=dbg //src:main",
+            "group": {
+                "kind": "build",
+            },
+        },
     ]
 }
