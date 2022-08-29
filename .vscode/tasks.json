@@ -1,0 +1,17 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            // "command": "bazel build --compilation_mode=dbg //...",
+            "command": "bazel build --repo_env=CC=clang --copt=\"-g\" --strip=never -c dbg --sandbox_debug --spawn_strategy=local //...",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+        }
+    ]
+}
