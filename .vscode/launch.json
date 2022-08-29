@@ -15,13 +15,7 @@
                 "sourceMap": {
                     "/proc/self/cwd": "${workspaceFolder}",
                 },
-                "sourceFileMap": {
-                    "/proc/self/cwd": "${workspaceFolder}",
-                }
             },
-            "preRunCommands": [
-                "breakpoint set -f greedy.cpp -l 17",
-            ],
         }
     ]
 }
