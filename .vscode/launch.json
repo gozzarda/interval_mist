@@ -12,6 +12,7 @@
             "program": "${workspaceFolder}/bazel-bin/src/main",
             "cwd": "${workspaceFolder}/bazel-bin/src/main.runfiles/__main__/",
             "linux": {
+                "program": "${workspaceFolder}/bazel-bin/src/main",
                 "sourceMap": {
                     "/proc/self/cwd": "${workspaceFolder}",
                 },
