@@ -38,7 +38,7 @@ struct State {
   Repr data;
   size_t num_verts;
 
-  State(size_t num_verts) : num_verts(num_verts), data(0) {
+  State(size_t num_verts) : data(0), num_verts(num_verts) {
     assert(num_verts <= max_verts);
   }
 
