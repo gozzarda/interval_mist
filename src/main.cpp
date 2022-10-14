@@ -25,6 +25,20 @@ void fuzz_greedy_vs_naive() {
   }
 }
 
+void fuzz_greedy_vs_dp() {
+  tester::Solver lhs = solvers::greedy::interval_mist_greedy;
+  tester::Solver rhs = solvers::dp::interval_mist_dp;
+  size_t num_tests = 5000;
+  size_t seed = 283947130;
+  size_t num_verts = 16;
+
+  auto result =
+      tester::fuzz_compare_solvers(lhs, rhs, num_tests, seed, num_verts);
+  if (result) {
+    result.value().report(std::cout, "GREEDY", "DP");
+  }
+}
+
 void pc_eq_mist_counterexample() {
   std::set<Interval> vs = {
       Interval(0, 2),  Interval(1, 6), Interval(3, 4),
@@ -43,7 +57,9 @@ void pc_eq_mist_counterexample() {
 int main() {
   interval_mist::pc_eq_mist_counterexample();
 
-  interval_mist::fuzz_greedy_vs_naive();
+  // interval_mist::fuzz_greedy_vs_naive();
+
+  interval_mist::fuzz_greedy_vs_dp();
 
   return 0;
 }
