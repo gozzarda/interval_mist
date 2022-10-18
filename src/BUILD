@@ -37,6 +37,8 @@ cc_binary(
     srcs = ["main.cpp"],
     deps = [
         ":graph",
+        "//src/graph:bfs",
+        "//src/graph:hamiltonian",
         ":interval",
         ":solvers",
         ":tester",

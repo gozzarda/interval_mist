@@ -41,6 +41,8 @@ struct Graph {
 
   bool is_spanning_tree_of(const std::set<Vertex> &) const;
 
+  std::set<Vertex> leaves() const;
+
   size_t num_leaves() const;
 
   void report_verts(std::ostream &os) const;

@@ -118,18 +118,23 @@ bool Graph::is_spanning_tree_of(const std::set<Vertex> &vs) const {
   return verts == vs && is_tree();
 }
 
-size_t Graph::num_leaves() const {
-  std::map<Vertex, size_t> cardinality;
+std::set<Vertex> Graph::leaves() const {
+  std::map<Vertex, size_t> degrees;
   for (auto [u, v] : edges) {
-    ++cardinality[u];
-    ++cardinality[v];
+    ++degrees[u];
+    ++degrees[v];
   }
-  size_t count = 0;
-  for (auto [k, v] : cardinality) {
-    if (v == 1)
-      ++count;
+  std::set<Vertex> result;
+  for (auto [k, v] : degrees) {
+    if (v == 1) {
+      result.insert(k);
+    }
   }
-  return count;
+  return result;
+}
+
+size_t Graph::num_leaves() const {
+  return leaves().size();
 }
 
 void Graph::report_verts(std::ostream &os) const {

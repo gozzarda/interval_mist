@@ -10,7 +10,7 @@ TEST(HamiltonianTest, Empty) {
   Graph g = Graph({}, {});
   std::optional<std::vector<Vertex>> expected = {{}};
   std::optional<std::vector<Vertex>> actual = hamiltonian(g);
-  EXPECT_EQ(actual, expected);
+  EXPECT_EQ(expected, actual);
 }
 
 TEST(HamiltonianTest, Singleton) {
@@ -18,7 +18,7 @@ TEST(HamiltonianTest, Singleton) {
   Graph g = Graph::interval_graph_from_set({a});
   std::optional<std::vector<Vertex>> expected = {{a}};
   std::optional<std::vector<Vertex>> actual = hamiltonian(g);
-  EXPECT_EQ(actual, expected);
+  EXPECT_EQ(expected, actual);
 }
 
 TEST(HamiltonianTest, NoHamiltonian) {
@@ -35,7 +35,7 @@ TEST(HamiltonianTest, NoHamiltonian) {
   Graph g = Graph::interval_graph_from_set(vs);
   std::optional<std::vector<Vertex>> expected = {};
   std::optional<std::vector<Vertex>> actual = hamiltonian(g);
-  EXPECT_EQ(actual, expected);
+  EXPECT_EQ(expected, actual);
 }
 
 TEST(HamiltonianTest, Simple) {
@@ -49,7 +49,7 @@ TEST(HamiltonianTest, Simple) {
   };
   Graph g = Graph::interval_graph_from_set(std::set(expected.begin(), expected.end()));
   std::optional<std::vector<Vertex>> actual = hamiltonian(g);
-  EXPECT_EQ(actual, expected);
+  EXPECT_EQ(expected, actual);
 }
 
 } // namespace interval_mist::graph::hamiltonian
