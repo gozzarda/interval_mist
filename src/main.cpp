@@ -1,6 +1,5 @@
 #include "graph.hpp"
-#include "graph/bfs.hpp"
-#include "graph/hamiltonian.hpp"
+#include "graph/tree_transform.hpp"
 #include "interval.hpp"
 #include "solvers.hpp"
 #include "tester.hpp"
@@ -90,81 +89,11 @@ void validate_lre_leaf_transform() {
       continue;
     }
 
-    // Repeatedly transform leaf to leaf path through LRE vertex to greedy hamiltonian order
-    // This should strictly decrease the degree of the LRE vertex without increasing number of leaves
-    auto prev_mist = orig_mist;
-    while (!prev_mist.leaves().count(lre)) {
-      // Get paths from every leaf to LRE and pick any two to find a leaf to leaf path through LRE
-      auto leaf_paths = graph::bfs::leaf_paths(prev_mist, lre);
-      assert(!leaf_paths.count(lre));
-      assert(leaf_paths.size() >= 2);
-      auto path = leaf_paths.begin()->second;
-      path.pop_back();
-      for (auto &[leaf, leaf_path] : leaf_paths) {
-        if (leaf_path[leaf_path.size()-2] != path.back()) {
-          path.insert(path.end(), leaf_path.rbegin(), leaf_path.rend());
-          break;
-        }
-      }
-      assert(path.size() > leaf_paths.begin()->second.size());
-
-      // Erase every edge in path from MIST
-      auto curr_mist = prev_mist;
-      Vertex prev = path.front();
-      for (Vertex curr : path) {
-        if (prev != curr) curr_mist.edges.erase(Edge(prev, curr));
-        prev = curr;
-      }
-
-      // Find the greedy hamiltonian ordering of the path
-      auto maybe_ham_path = graph::hamiltonian::hamiltonian(Graph::interval_graph_from_set(std::set<Vertex>(path.begin(), path.end())));
-      assert(maybe_ham_path.has_value());
-      auto ham_path = maybe_ham_path.value();
-
-      // Insert new path edges into MIST
-      prev = ham_path.front();
-      for (Vertex curr : ham_path) {
-        if (prev != curr) curr_mist.edges.insert(Edge(prev, curr));
-        prev = curr;
-      }
-
-      // Test that MIST is still a tree
-      if (!curr_mist.is_tree()) {
-        std::cerr << std::endl;
-        std::cerr << "ERROR: MIST is no longer tree" << std::endl;
-        return;
-      }
-
-      // Test that number of leaves has not increased
-      if (curr_mist.leaves().size() > prev_mist.leaves().size()) {
-        std::cerr << std::endl;
-        std::cerr << "ERROR: Number of leaves in MIST has increased" << std::endl;
-        return;
-      }
-
-      // Test that degree of LRE has decreased
-      size_t prev_degree = 0, curr_degree = 0;
-      for (auto [u, v] : prev_mist.edges) {
-        if (u == lre) ++prev_degree;
-        if (v == lre) ++prev_degree;
-      }
-      for (auto [u, v] : curr_mist.edges) {
-        if (u == lre) ++curr_degree;
-        if (v == lre) ++curr_degree;
-      }
-      if (curr_degree >= prev_degree) {
-        std::cerr << std::endl;
-        std::cerr << "ERROR: Degree of LRE vertex has not decreased" << std::endl;
-        return;
-      }
-
-      prev_mist = curr_mist;
-    }
-
-    if (!prev_mist.leaves().count(lre)) {
+    if (!graph::tree_transform::lre_leaf_transform(orig_mist).has_value()) {
       std::cerr << std::endl;
-      std::cerr << "ERROR: Failed to convert MIST to LRE-leaf form" << std::endl;
-      return;
+      std::cerr << "ERROR: validate_lre_leaf_transform: Failed to transform MIST to LRE form" << std::endl;
+      orig_mist.report(std::cerr);
+      std::cerr << std::endl;
     }
   }
 

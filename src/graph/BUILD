@@ -35,3 +35,24 @@ cc_test(
     "hamiltonian",
   ],
 )
+
+cc_library(
+    name = "tree_transform",
+    srcs = ["tree_transform.cpp"],
+    hdrs = ["tree_transform.hpp"],
+    deps = [
+      "//src:graph",
+      "bfs",
+      "hamiltonian",
+    ],
+)
+
+cc_test(
+  name = "tree_transform_test",
+  size = "small",
+  srcs = ["tree_transform_test.cpp"],
+  deps = [
+    "@com_google_googletest//:gtest_main",
+    "tree_transform",
+  ],
+)

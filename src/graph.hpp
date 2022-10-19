@@ -50,6 +50,10 @@ struct Graph {
   void report_edges(std::ostream &os) const;
 
   void report(std::ostream &os) const;
+
+  bool operator==(const Graph& rhs) const;
+
+  friend std::ostream &operator<<(std::ostream &os, const Graph &g);
 };
 
 } // namespace interval_mist::graph

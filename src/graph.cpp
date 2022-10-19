@@ -161,4 +161,27 @@ void Graph::report(std::ostream &os) const {
   os << ')';
 }
 
+bool Graph::operator==(const Graph &rhs) const {
+  return verts == rhs.verts && edges == rhs.edges;
+}
+
+std::ostream &operator<<(std::ostream &os, const Graph &g) {
+  os << "( {";
+  bool first = true;
+  for (auto v : g.verts) {
+    if (first) os << ' '; else os << ", ";
+    first = false;
+    os << v;
+  }
+  os << " }, {";
+  first = true;
+  for (auto e : g.edges) {
+    if (first) os << ' '; else os << ", ";
+    first = false;
+    os << e;
+  }
+  os << " } )";
+  return os;
+}
+
 } // namespace interval_mist::graph
