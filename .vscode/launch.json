@@ -1,0 +1,22 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "main (LLDB)",
+            "type": "lldb",
+            "preLaunchTask": "Bazel Build main (Debug)",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/src/main",
+            "cwd": "${workspaceFolder}/bazel-bin/src/main.runfiles/__main__/",
+            "linux": {
+                "program": "${workspaceFolder}/bazel-bin/src/main",
+                "sourceMap": {
+                    "/proc/self/cwd": "${workspaceFolder}",
+                },
+            },
+        }
+    ]
+}

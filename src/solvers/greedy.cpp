@@ -7,7 +7,8 @@
 
 namespace interval_mist::solvers::greedy {
 
-static constexpr bool kAssertPrefixProperty = false;
+static constexpr bool featureAssertPrefixProperty = false;
+static constexpr bool featureAssertRootLeafProperty = true;
 
 using Vertex = Graph::Vertex;
 using Edge = Graph::Edge;
@@ -33,9 +34,7 @@ std::optional<Graph> interval_mist_greedy(Graph g) {
   // Invariant: prev is always a leaf in the tree
   Vertex prev = *todo.begin();
   todo.erase(todo.begin());
-  if constexpr (kAssertPrefixProperty) {
-    tvs.insert(prev);
-  }
+  tvs.insert(prev);
 
   // While there are vertices not yet in tree
   while (!todo.empty()) {
@@ -50,9 +49,7 @@ std::optional<Graph> interval_mist_greedy(Graph g) {
 
     if (curr) {
       // Greedily attach curr to leaf, making prev internal (unless root)
-      if constexpr (kAssertPrefixProperty) {
-        tvs.insert(curr.value());
-      }
+      tvs.insert(curr.value());
       tes.insert(Edge(prev, curr.value()));
       todo.erase(curr.value());
       prev = curr.value();
@@ -65,9 +62,7 @@ std::optional<Graph> interval_mist_greedy(Graph g) {
       for (auto u : todo) {
         for (auto v : adjlist[u]) {
           if (!todo.count(v)) {
-            if constexpr (kAssertPrefixProperty) {
-              tvs.insert(u);
-            }
+            tvs.insert(u);
             tes.insert(Edge(u, v));
             todo.erase(u);
             prev = u;
@@ -80,13 +75,23 @@ std::optional<Graph> interval_mist_greedy(Graph g) {
       }
     }
 
-    if constexpr (kAssertPrefixProperty) {
+    if constexpr (featureAssertPrefixProperty) {
       Graph t(tvs, tes);
       auto tg = Graph::interval_graph_from_set(tvs);
       assert(t.is_spanning_tree_of(tvs));
       auto mist_dp = interval_mist::solvers::dp::interval_mist_dp(tg).value();
       assert(t.num_leaves() == mist_dp.num_leaves());
     }
+  }
+
+  if constexpr (featureAssertRootLeafProperty) {
+    auto root = *vs.begin();
+    size_t root_degree = 0;
+    for (Edge e : tes) {
+      if (e.src == root || e.dst == root)
+        ++root_degree;
+    }
+    assert(root_degree == 1);
   }
 
   return {{vs, tes}};

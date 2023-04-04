@@ -41,6 +41,8 @@ struct Graph {
 
   bool is_spanning_tree_of(const std::set<Vertex> &) const;
 
+  std::set<Vertex> leaves() const;
+
   size_t num_leaves() const;
 
   void report_verts(std::ostream &os) const;
@@ -48,6 +50,10 @@ struct Graph {
   void report_edges(std::ostream &os) const;
 
   void report(std::ostream &os) const;
+
+  bool operator==(const Graph& rhs) const;
+
+  friend std::ostream &operator<<(std::ostream &os, const Graph &g);
 };
 
 } // namespace interval_mist::graph

@@ -16,7 +16,7 @@ namespace interval_mist::interval {
 
 using Coord = Interval::Coord;
 
-Interval::Interval(Coord lwr, Coord upr) : lower(lwr), upper(upr) {
+Interval::Interval(Coord lwr, Coord upr) : upper(upr), lower(lwr) {
   assert(lower <= upper);
 }
 

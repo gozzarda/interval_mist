@@ -64,7 +64,7 @@ std::optional<Result> fuzz_compare_solvers(Solver lhs, Solver rhs,
   std::default_random_engine rng(seed);
 
   for (size_t test = 0; test < num_tests; ++test) {
-    std::cerr << "Running test " << test << " / " << num_tests << "...";
+    std::cerr << "Running test " << (test + 1) << " / " << num_tests << "...";
 
     size_t seed = rng();
     Result result = compare_solvers(lhs, rhs, seed, num_verts);
